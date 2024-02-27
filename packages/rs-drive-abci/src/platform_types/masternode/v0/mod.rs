@@ -119,7 +119,7 @@ pub struct MasternodeStateV0 {
     pub voting_address: [u8; 20],
 
     /// The masternode payout public address.
-    pub payout_address: [u8; 20],
+    pub payout_shares: Vec<PayoutShare>,
 
     /// The masternode operator's public key.
     pub pub_key_operator: Vec<u8>,
@@ -154,7 +154,7 @@ impl From<DMNState> for MasternodeStateV0 {
             platform_p2p_port,
             platform_http_port,
         } = value;
-
+        let payout_shares = vec![payout_address as PayoutShare];
         Self {
             service,
             registered_height,
@@ -163,7 +163,7 @@ impl From<DMNState> for MasternodeStateV0 {
             revocation_reason,
             owner_address,
             voting_address,
-            payout_address,
+            payout_shares,
             pub_key_operator,
             operator_payout_address,
             platform_node_id,
@@ -183,14 +183,15 @@ impl From<MasternodeStateV0> for DMNState {
             revocation_reason,
             owner_address,
             voting_address,
-            payout_address,
+            payout_shares,
             pub_key_operator,
             operator_payout_address,
             platform_node_id,
             platform_p2p_port,
             platform_http_port,
         } = value;
-
+        // TODO: Update DMNState struct, for the moment just pass the first address
+        let payout_address = payout_shares[0].payout_address.clone();
         Self {
             service,
             registered_height,
@@ -205,6 +206,23 @@ impl From<MasternodeStateV0> for DMNState {
             platform_node_id,
             platform_p2p_port,
             platform_http_port,
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct PayoutShare {
+    /// A masternode payout public address.
+    payout_address: [u8; 20],
+    /// Fraction (between 0 and 10000) of the reward
+    payout_share_reward: u16,
+}
+
+impl From<[u8; 20]> for PayoutShare {
+    fn from(value: [u8; 20]) -> Self {
+        Self {
+            payout_address: value,
+            payout_share_reward: 10000,
         }
     }
 }
